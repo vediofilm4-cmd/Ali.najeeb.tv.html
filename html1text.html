@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ali Najeeb TV - منصة الفيديوهات الشخصية</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Plyr Video Player -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root{
+            --bg-1: #0b1020;
+            --bg-2: #0f1724;
+            --muted: #9aa4c0;
+            --accent-from: #ff3b3b; /* brand red */
+            --accent-to: #7c3aed;   /* brand purple */
+            --glass: rgba(255,255,255,0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(180deg,var(--bg-1),var(--bg-2));
+            color: #ffffff;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, var(--accent-from) 0%, var(--accent-to) 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Brand gradient helper */
+        .brand-gradient { background: linear-gradient(90deg,var(--accent-from),var(--accent-to)); }
+        
+        .card-hover {
+            transition: transform 280ms cubic-bezier(.2,.9,.2,1), box-shadow 280ms;
+            will-change: transform;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(15,23,42,0.6), 0 6px 18px rgba(45,182,255,0.08);
+        }
+        
+        .glass-effect {
+            background: var(--glass);
+            backdrop-filter: blur(8px) saturate(120%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        
+        .plyr {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* Card details */
+        .card-title{font-weight:700;color:#fff}
+        .card-meta{color:var(--muted);font-size:.86rem}
+
+        /* Badge */
+        .badge{background:linear-gradient(90deg,var(--accent-from),var(--accent-to));padding:4px 8px;border-radius:999px;font-size:.7rem;font-weight:700}
+
+        /* Player controls area */
+        .player-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
+        .autoplay-btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:999px;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+        .autoplay-btn.active{background:linear-gradient(90deg,var(--accent-from),var(--accent-to));color:white;border:0}
+        .back-btn{background:transparent;border:0;color:var(--muted);cursor:pointer}
+        
+        .admin-panel {
+            display: none;
+        }
+        
+        .admin-panel.active {
+            display: block;
+        }
+        
+        .main-content {
+            display: block;
+        }
+        
+        .main-content.hidden {
+            display: none;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+        
+        .episode-item {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .episode-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+        
+        .episode-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-50 glass-effect border-b border-gray-800">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="showMain()">
+                <div style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;overflow:visible;">
+                    <img src="logo.png" alt="Ali Najeeb TV" style="width:72px;height:72px;display:block;object-fit:contain;" onerror="this.onerror=null;this.src='logo.svg'" />
+                </div>
+                <h1 class="text-4xl font-bold gradient-text">Ali Najeeb TV</h1>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button onclick="toggleAdmin()" class="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition flex items-center gap-2">
+                    <i class="fas fa-cog"></i>
+                    <span class="hidden sm:inline">لوحة التحكم</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content pt-20 pb-10 px-4">
+        <div class="container mx-auto">
+            
+            <!-- Hero Section -->
+            <section class="mb-10 text-center py-10">
+                <h2 class="text-4xl md:text-6xl font-bold mb-4 gradient-text">منصتك الشخصية للفيديوهات</h2>
+                <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+                    شاهد مجموعتك الخاصة من المسلسلات والأفلام بجودة عالية وتجربة مشاهدة سلسة
+                </p>
+            </section>
+
+            <!-- Search & Filter -->
+            <section class="mb-8 flex flex-wrap gap-4 justify-center">
+                <div class="relative flex-1 max-w-md">
+                    <input type="text" id="searchInput" placeholder="ابحث عن مسلسل أو فيلم..." 
+                           class="w-full px-4 py-3 pr-10 rounded-xl bg-gray-800 border border-gray-700 focus:border-purple-500 focus:outline-none transition"
+                           onkeyup="searchContent()">
+                    <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                </div>
+                
+                <select id="categoryFilter" onchange="filterByCategory()" 
+                        class="px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 focus:border-purple-500 focus:outline-none cursor-pointer">
+                    <option value="all">جميع التصنيفات</option>
+                    <option value="arabic">مسلسلات عربية</option>
+                    <option value="foreign">مسلسلات أجنبية</option>
+                    <option value="movies">أفلام</option>
+                </select>
+            </section>
+
+            <!-- Video Player Section (Hidden by default) -->
+            <section id="playerSection" class="hidden mb-10">
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <!-- Player -->
+                    <div class="lg:col-span-2">
+                        <div class="relative rounded-2xl overflow-hidden bg-black shadow-2xl">
+                            <video id="mainPlayer" controls>
+                                <source src="" type="video/mp4">
+                            </video>
+                        </div>
+                        <div class="player-controls">
+                            <div>
+                                <button class="back-btn" onclick="closePlayer()"><i class="fas fa-arrow-left ml-2"></i> رجوع</button>
+                            </div>
+                            <div>
+                                <button id="autoplayToggle" class="autoplay-btn" onclick="toggleAutoplay()">
+                                    <i class="fas fa-forward"></i>
+                                    <span id="autoplayLabel">Autoplay</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-4 glass-effect rounded-xl">
+                            <h3 id="currentTitle" class="text-2xl font-bold mb-2"></h3>
+                            <p id="currentDesc" class="text-gray-400"></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Episodes List -->
+                    <div class="lg:col-span-1">
+                        <div class="glass-effect rounded-xl p-4 h-full max-h-[600px] overflow-y-auto">
+                            <h4 class="text-lg font-bold mb-4 flex items-center gap-2">
+                                <i class="fas fa-list text-purple-500"></i>
+                                قائمة الحلقات
+                            </h4>
+                            <div id="episodesList" class="space-y-2">
+                                <!-- Episodes will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Content Grid -->
+            <section id="contentGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <!-- Content will be loaded here -->
+            </section>
+
+            <!-- Parts Selection Modal -->
+            <div id="partsModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+                <div class="glass-effect rounded-2xl max-w-md w-full p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 id="partsTitle" class="text-2xl font-bold gradient-text"></h3>
+                        <button onclick="closePartsModal()" class="text-gray-400 hover:text-white text-2xl">✕</button>
+                    </div>
+
+                    <p class="text-gray-400 mb-6 text-center">اختر الجزء الذي تريد مشاهدته</p>
+
+                    <div id="partsGrid" class="grid grid-cols-2 gap-3">
+                        <!-- Parts buttons will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-20">
+                <i class="fas fa-film text-6xl text-gray-600 mb-4"></i>
+                <p class="text-gray-400 text-xl">لا يوجد محتوى حالياً</p>
+                <p class="text-gray-600 mt-2">أضف محتوى جديد من لوحة التحكم</p>
+            </div>
+
+            <!-- Contact Section -->
+            <section class="mt-20 pt-10 border-t border-gray-800">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold gradient-text mb-4">تواصل معنا</h2>
+                    <p class="text-gray-400">نرحب باستفساراتك وملاحظاتك</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                    <!-- Email Card -->
+                    <a href="mailto:ali.najeeb1202@gmail.com" class="card-hover glass-effect rounded-2xl p-6 text-center group">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center brand-gradient">
+                            <i class="fas fa-envelope text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold mb-2">البريد الإلكتروني</h3>
+                        <p class="text-gray-400 break-all">ali.najeeb1202@gmail.com</p>
+                        <p class="text-xs text-gray-500 mt-2">اضغط للإرسال</p>
+                    </a>
+
+                    <!-- Admin Panel Card -->
+                    <button onclick="toggleAdmin()" class="card-hover glass-effect rounded-2xl p-6 text-center group hover:border-purple-500 transition">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center brand-gradient">
+                            <i class="fas fa-lock text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold mb-2">لوحة التحكم</h3>
+                        <p class="text-gray-400">إضافة وإدارة المحتوى</p>
+                        <p class="text-xs text-gray-500 mt-2">إدارة الموقع</p>
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Admin Panel -->
+    <div class="admin-panel pt-20 pb-10 px-4 min-h-screen bg-gray-900">
+        <div class="container mx-auto max-w-4xl">
+            
+            <!-- Login Form -->
+            <div id="loginForm" class="max-w-md mx-auto mt-20">
+                <div class="glass-effect rounded-2xl p-8 text-center">
+                    <div class="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center brand-gradient">
+                        <i class="fas fa-lock text-3xl text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-6">تسجيل دخول المشرف</h2>
+                    <input type="password" id="adminPassword" placeholder="كلمة المرور" 
+                           class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 focus:border-purple-500 focus:outline-none mb-4 text-center">
+                    <button onclick="loginAdmin()" class="w-full py-3 rounded-xl brand-gradient hover:opacity-95 transition font-bold" style="color:white;">
+                        دخول
+                    </button>
+                </div>
+            </div>
+
+            <!-- Admin Dashboard -->
+            <div id="adminDashboard" class="hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-bold gradient-text">لوحة التحكم</h2>
+                    <button onclick="logoutAdmin()" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 transition">
+                        <i class="fas fa-sign-out-alt ml-2"></i>
+                        خروج
+                    </button>
+                </div>
+
+                <!-- Add Content Form -->
+                <div class="glass-effect rounded-2xl p-6 mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold flex items-center gap-2">
+                            <i class="fas fa-plus-circle text-green-500"></i>
+                            إضافة محتوى جديد
+                        </h3>
+                        <button type="button" onclick="addTestContent()" class="px-3 py-1 rounded text-sm bg-blue-600 hover:bg-blue-700 transition">
+                            <i class="fas fa-flask ml-1"></i>اختبار سريع
+                        </button>
+                    </div>
+                    <form id="contentForm" onsubmit="addContent(event)" class="space-y-4">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1">العنوان</label>
+                                <input type="text" id="contentTitle" required
+                                       class="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:border-purple-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1">التصنيف</label>
+                                <select id="contentCategory" required
+                                        class="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:border-purple-500 focus:outline-none">
+                                    <option value="arabic">مسلسل عربي</option>
+                                    <option value="foreign">مسلسل أجنبي</option>
+                                    <option value="movies">فيلم</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">الوصف</label>
+                            <textarea id="contentDesc" rows="2" required
+                                      class="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:border-purple-500 focus:outline-none"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">صورة الغلاف</label>
+                            <div id="coverImagePreview" class="mb-3"></div>
+                            <button type="button" onclick="document.getElementById('coverImageInput').click()" class="w-full px-4 py-3 rounded-lg border border-purple-600 text-purple-500 hover:bg-purple-600/10 transition mb-2">
+                                <i class="fas fa-image ml-2"></i>
+                                اختر صورة من جهازك
+                            </button>
+                            <input type="file" id="coverImageInput" accept="image/*" style="display:none" onchange="handleCoverImageSelect(event)">
+                            <input type="url" id="contentImage" placeholder="أو أضف رابط الصورة"
+                                   class="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:border-purple-500 focus:outline-none">
+                            <p class="text-xs text-gray-500 mt-2">اختر ملف صورة أو أضف رابط</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">الفيديوهات</label>
+                            <div id="videoFilesList" class="space-y-2 mb-3">
+                                <!-- Video files will be listed here -->
+                            </div>
+                            <button type="button" onclick="document.getElementById('videoFileInput').click()" class="w-full px-4 py-3 rounded-lg border border-blue-600 text-blue-500 hover:bg-blue-600/10 transition">
+                                <i class="fas fa-plus ml-2"></i>
+                                اختر فيديو من جهازك
+                            </button>
+                            <input type="file" id="videoFileInput" accept="video/*" style="display:none" onchange="handleVideoFileSelect(event)">
+                            <p class="text-xs text-gray-500 mt-2">اختر ملفات فيديو من جهازك</p>
+                            <textarea id="contentVideos" rows="2" placeholder="أو أضف روابط (رابط واحد لكل سطر)"
+                                      class="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:border-purple-500 focus:outline-none mt-2"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 transition font-bold">
+                            <i class="fas fa-save ml-2"></i>
+                            حفظ المحتوى
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Content List -->
+                <div class="glass-effect rounded-2xl p-6">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="fas fa-list text-blue-500"></i>
+                        المحتوى الحالي
+                    </h3>
+                    <div id="adminContentList" class="space-y-3">
+                        <!-- Admin content list will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Modal -->
+            <div id="editModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+                <div class="glass-effect rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold gradient-text">تعديل المحتوى</h3>
+                        <button onclick="closeEditModal()" class="text-gray-400 hover:text-white text-2xl">✕</button>
+                    </div>
+
+                    <form id="editForm" onsubmit="saveEditContent(event)" class="space-y-4">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1">العنوان</label>
+                                <input type="text" id="editTitle" required
+                                       class="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:border-purple-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-1">التصنيف</label>
+                                <select id="editCategory" required class="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:border-purple-500 focus:outline-none">
+                                    <option value="arabic">مسلسل عربي</option>
+                                    <option value="foreign">مسلسل أجنبي</option>
+                                    <option value="movies">فيلم</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">الوصف</label>
+                            <textarea id="editDesc" rows="2" required class="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:border-purple-500 focus:outline-none"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">صورة الغلاف</label>
+                            <input type="url" id="editImage" placeholder="https://example.com/image.jpg"
+                                   class="w-full px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:border-purple-500 focus:outline-none">
+                            <p class="text-xs text-gray-400 mt-1">أضف رابط الصورة أو اترك الحقل فارغاً للاحتفاظ بالصورة الحالية</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2">الفيديوهات والأجزاء</label>
+                            <div id="videoUrlsList" class="space-y-2 mb-3">
+                                <!-- Video URLs will be listed here -->
+                            </div>
+                            <button type="button" onclick="addVideoUrl()" class="w-full px-4 py-2 rounded-lg border border-green-600 text-green-500 hover:bg-green-600/10 transition">
+                                <i class="fas fa-plus ml-2"></i>
+                                إضافة فيديو أو جزء
+                            </button>
+                            <p class="text-xs text-gray-500 mt-2">يمكنك إضافة أجزاء من نفس الفيلم: جزء أول، جزء ثاني... إلخ</p>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button type="submit" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 transition font-bold">
+                                <i class="fas fa-save ml-2"></i>
+                                حفظ التعديلات
+                            </button>
+                            <button type="button" onclick="closeEditModal()" class="flex-1 py-2 rounded-lg border border-gray-700 hover:bg-gray-800 transition">
+                                إلغاء
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // IndexedDB for video file storage
+        let db = null;
+        let videoFiles = [];
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('aliNajeebDB', 1);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('videos')) {
+                        db.createObjectStore('videos', { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('images')) {
+                        db.createObjectStore('images', { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+
+        async function saveVideoFile(file) {
+            if (!db) await initDB();
+            const fileId = `video_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(['videos'], 'readwrite');
+                const store = tx.objectStore('videos');
+                store.put({ id: fileId, file: file, name: file.name, timestamp: Date.now() });
+                tx.oncomplete = () => resolve(fileId);
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
+        async function getVideoFile(fileId) {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(['videos'], 'readonly');
+                const store = tx.objectStore('videos');
+                const request = store.get(fileId);
+                request.onsuccess = () => resolve(request.result ? request.result.file : null);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function saveCoverImage(file) {
+            if (!db) await initDB();
+            const imageId = `image_${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(['images'], 'readwrite');
+                const store = tx.objectStore('images');
+                store.put({ id: imageId, file: file, name: file.name, timestamp: Date.now() });
+                tx.oncomplete = () => resolve(imageId);
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
+        async function getCoverImage(imageId) {
+            if (!db) await initDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(['images'], 'readonly');
+                const store = tx.objectStore('images');
+                const request = store.get(imageId);
+                request.onsuccess = () => resolve(request.result ? request.result.file : null);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function handleVideoFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            try {
+                const fileId = await saveVideoFile(file);
+                videoFiles.push({ id: fileId, name: file.name, isFile: true });
+                renderVideoFilesList();
+            } catch (err) {
+                alert('خطأ في حفظ الفيديو: ' + err.message);
+            }
+            
+            document.getElementById('videoFileInput').value = '';
+        }
+
+        function renderVideoFilesList() {
+            const list = document.getElementById('videoFilesList');
+            list.innerHTML = videoFiles.map((video, index) => `
+                <div class="flex gap-2 items-end bg-gray-800 p-2 rounded-lg">
+                    <div class="flex-1">
+                        <div class="text-xs text-gray-400">جزء ${index + 1}</div>
+                        <p class="text-sm text-gray-300 truncate">${video.name}</p>
+                    </div>
+                    <button type="button" onclick="removeVideoFile(${index})" class="p-2 rounded-lg bg-red-600/20 text-red-500 hover:bg-red-600 hover:text-white transition">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function removeVideoFile(index) {
+            videoFiles.splice(index, 1);
+            renderVideoFilesList();
+        }
+
+        let selectedCoverImageId = null;
+
+        async function handleCoverImageSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            try {
+                const imageId = await saveCoverImage(file);
+                selectedCoverImageId = imageId;
+                
+                // عرض المعاينة
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('coverImagePreview').innerHTML = `
+                        <div class="relative w-24 h-36 rounded-lg overflow-hidden border border-green-500">
+                            <img src="${e.target.result}" class="w-full h-full object-cover">
+                            <div class="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-sm">
+                                <i class="fas fa-check"></i>
+                            </div>
+                        </div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } catch (err) {
+                alert('خطأ في حفظ الصورة: ' + err.message);
+            }
+            
+            document.getElementById('coverImageInput').value = '';
+        }
+
+        // Data Storage
+        let contentData = JSON.parse(localStorage.getItem('aliNajeebContent')) || [
+            {
+                id: 1,
+                title: 'الفيلم الأول',
+                category: 'movies',
+                description: 'فيلم تجريبي للاختبار',
+                image: 'https://via.placeholder.com/300x450?text=Movie+1',
+                videos: [{ url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4', isFile: false }],
+                date: '20/2/2026'
+            },
+            {
+                id: 2,
+                title: 'مسلسل الاختبار',
+                category: 'arabic',
+                description: 'مسلسل عربي بجزأين للاختبار',
+                image: 'https://via.placeholder.com/300x450?text=Series',
+                videos: [
+                    { url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ElephantsDream.mp4', isFile: false },
+                    { url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/ForBiggerBlazes.mp4', isFile: false }
+                ],
+                date: '20/2/2026'
+            }
+        ];
+        let currentPlaying = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await initDB();
+            } catch (err) {
+                console.log('IndexedDB not available, using URLs only');
+            }
+            await renderContent();
+            initPlayer();
+        });
+
+        // Initialize Plyr and expose instance
+        function initPlayer() {
+            window.plyr = new Plyr('#mainPlayer', {
+                controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'captions', 'settings', 'pip', 'airplay', 'fullscreen'],
+                settings: ['captions', 'quality', 'speed'],
+            });
+            // load autoplay preference
+            window.autoplayEnabled = localStorage.getItem('aliNajeeb_autoplay') !== 'false';
+            const autoBtn = document.getElementById('autoplayToggle');
+            const autoLabel = document.getElementById('autoplayLabel');
+            if (autoBtn) {
+                if (window.autoplayEnabled) { autoBtn.classList.add('active'); autoLabel.textContent = 'Autoplay: On'; }
+                else { autoBtn.classList.remove('active'); autoLabel.textContent = 'Autoplay: Off'; }
+            }
+
+            // Save current time periodically to support resume
+            const videoEl = document.getElementById('mainPlayer');
+            videoEl.addEventListener('timeupdate', () => {
+                if (!window.currentContentId && window.currentContentId !== 0) return;
+                if (window.currentEpisodeIndex === undefined) return;
+                const key = `aliNajeeb_play_${window.currentContentId}_${window.currentEpisodeIndex}`;
+                try { localStorage.setItem(key, Math.floor(videoEl.currentTime)); } catch (e) {}
+            });
+
+            // Autoplay next episode when current ends
+            videoEl.addEventListener('ended', () => {
+                if (!window.autoplayEnabled) return;
+                const content = contentData.find(c => c.id === window.currentContentId);
+                if (!content) return;
+                const nextIndex = (window.currentEpisodeIndex || 0) + 1;
+                if (nextIndex < content.videos.length) {
+                    playEpisodeByIndex(window.currentContentId, nextIndex);
+                }
+            });
+        }
+
+        function toggleAutoplay(){
+            window.autoplayEnabled = !window.autoplayEnabled;
+            try{ localStorage.setItem('aliNajeeb_autoplay', window.autoplayEnabled ? 'true' : 'false'); }catch(e){}
+            const autoBtn = document.getElementById('autoplayToggle');
+            const autoLabel = document.getElementById('autoplayLabel');
+            if (autoBtn){
+                if (window.autoplayEnabled) { autoBtn.classList.add('active'); autoLabel.textContent = 'Autoplay: On'; }
+                else { autoBtn.classList.remove('active'); autoLabel.textContent = 'Autoplay: Off'; }
+            }
+        }
+
+        // Toggle Admin Panel
+        function toggleAdmin() {
+            const adminPanel = document.querySelector('.admin-panel');
+            const mainContent = document.querySelector('.main-content');
+            
+            if (adminPanel.classList.contains('active')) {
+                adminPanel.classList.remove('active');
+                mainContent.classList.remove('hidden');
+            } else {
+                adminPanel.classList.add('active');
+                mainContent.classList.add('hidden');
+                checkAdminLogin();
+            }
+        }
+
+        function showMain() {
+            document.querySelector('.admin-panel').classList.remove('active');
+            document.querySelector('.main-content').classList.remove('hidden');
+        }
+
+        // Admin Authentication
+        function loginAdmin() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === '37944904') {
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                showAdminDashboard();
+            } else {
+                alert('كلمة المرور غير صحيحة!');
+            }
+        }
+
+        function logoutAdmin() {
+            sessionStorage.removeItem('adminLoggedIn');
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('adminDashboard').classList.add('hidden');
+        }
+
+        function checkAdminLogin() {
+            if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+                showAdminDashboard();
+            } else {
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('adminDashboard').classList.add('hidden');
+            }
+        }
+
+        function showAdminDashboard() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('adminDashboard').classList.remove('hidden');
+            renderAdminContent();
+        }
+
+        // Add Content
+        async function addContent(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('contentTitle').value.trim();
+            const category = document.getElementById('contentCategory').value;
+            const desc = document.getElementById('contentDesc').value.trim();
+            const imageUrl = document.getElementById('contentImage').value.trim();
+            
+            if (!title || (!selectedCoverImageId && !imageUrl)) {
+                alert('يجب ملء حقول: العنوان والصورة');
+                return;
+            }
+            
+            // جمع الملفات والروابط
+            const videoSources = [...videoFiles.map(v => ({ id: v.id, name: v.name, isFile: true }))];
+            const videosText = document.getElementById('contentVideos').value.split('\n').filter(v => v.trim());
+            videosText.forEach(url => {
+                videoSources.push({ url: url, isFile: false });
+            });
+
+            if (videoSources.length === 0) {
+                alert('يجب إضافة فيديو واحد على الأقل (ملف أو رابط)');
+                return;
+            }
+            
+            const newContent = {
+                id: Date.now(),
+                title,
+                category,
+                description: desc,
+                image: selectedCoverImageId ? { id: selectedCoverImageId, isFile: true } : { url: imageUrl, isFile: false },
+                videos: videoSources,
+                date: new Date().toLocaleDateString('ar-SA')
+            };
+            
+            contentData.push(newContent);
+            localStorage.setItem('aliNajeebContent', JSON.stringify(contentData));
+            
+            document.getElementById('contentForm').reset();
+            document.getElementById('coverImagePreview').innerHTML = '';
+            videoFiles = [];
+            selectedCoverImageId = null;
+            document.getElementById('videoFilesList').innerHTML = '';
+            await renderContent();
+            await renderAdminContent();
+            
+            alert('✓ تم الحفظ بنجاح!');
+        }
+
+        // Quick Test Content
+        function addTestContent() {
+            const testContent = {
+                id: Date.now(),
+                title: 'فيلم اختبار',
+                category: 'movies',
+                description: 'هذا محتوى تجريبي لاختبار المنصة',
+                image: 'https://via.placeholder.com/300x450?text=Test+Content',
+                videos: [
+                    { url: 'https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4', isFile: false }
+                ],
+                date: new Date().toLocaleDateString('ar-SA')
+            };
+            
+            contentData.push(testContent);
+            localStorage.setItem('aliNajeebContent', JSON.stringify(contentData));
+            
+            renderContent();
+            renderAdminContent();
+            
+            alert('✓ تمت إضافة محتوى الاختبار!\nاذهب إلى الصفحة الرئيسية واضغط على الفيلم');
+        }
+
+        // Delete Content
+        async function deleteContent(id) {
+            if (confirm('هل أنت متأكد من حذف هذا المحتوى؟')) {
+                contentData = contentData.filter(item => item.id !== id);
+                localStorage.setItem('aliNajeebContent', JSON.stringify(contentData));
+                await renderContent();
+                await renderAdminContent();
+                
+                if (currentPlaying === id) {
+                    closePlayer();
+                }
+            }
+        }
+
+        // Edit Content Functions
+        let editingContentId = null;
+        let editingVideoUrls = [];
+
+        function openEditModal(id) {
+            const item = contentData.find(c => c.id === id);
+            if (!item) return;
+            
+            editingContentId = id;
+            editingVideoUrls = [...item.videos];
+            
+            document.getElementById('editTitle').value = item.title;
+            document.getElementById('editCategory').value = item.category;
+            document.getElementById('editDesc').value = item.description;
+            document.getElementById('editImage').value = item.image;
+            
+            renderVideoUrlsList();
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            editingContentId = null;
+            editingVideoUrls = [];
+        }
+
+        function renderVideoUrlsList() {
+            const list = document.getElementById('videoUrlsList');
+            list.innerHTML = editingVideoUrls.map((url, index) => `
+                <div class="flex gap-2 items-end">
+                    <div class="flex-1">
+                        <label class="block text-xs text-gray-500 mb-1">${editingVideoUrls.length > 1 ? 'جزء ' + (index + 1) : 'الفيديو'}</label>
+                        <input type="url" value="${url}" onchange="editingVideoUrls[${index}] = this.value"
+                               class="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:border-purple-500 focus:outline-none text-sm">
+                    </div>
+                    <button type="button" onclick="removeVideoUrl(${index})" class="p-2 rounded-lg bg-red-600/20 text-red-500 hover:bg-red-600 hover:text-white transition">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function addVideoUrl() {
+            editingVideoUrls.push('');
+            renderVideoUrlsList();
+        }
+
+        function removeVideoUrl(index) {
+            editingVideoUrls.splice(index, 1);
+            renderVideoUrlsList();
+        }
+
+        async function saveEditContent(e) {
+            e.preventDefault();
+            
+            if (editingVideoUrls.length === 0) {
+                alert('يجب إضافة رابط واحد على الأقل');
+                return;
+            }
+
+            const item = contentData.find(c => c.id === editingContentId);
+            if (!item) return;
+            
+            item.title = document.getElementById('editTitle').value;
+            item.category = document.getElementById('editCategory').value;
+            item.description = document.getElementById('editDesc').value;
+            item.videos = editingVideoUrls.filter(v => v.trim());
+            
+            const newImage = document.getElementById('editImage').value.trim();
+            if (newImage) {
+                item.image = newImage;
+            }
+            
+            localStorage.setItem('aliNajeebContent', JSON.stringify(contentData));
+            await renderContent();
+            await renderAdminContent();
+            closeEditModal();
+            alert('تم تحديث المحتوى بنجاح!');
+        }
+
+        // Render Main Content
+        async function renderContent() {
+            const grid = document.getElementById('contentGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (contentData.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            grid.innerHTML = '';
+            
+            for (const item of contentData) {
+                const imageUrl = item.image && item.image.isFile ? null : (item.image && item.image.url ? item.image.url : item.image);
+                const imageId = item.image && item.image.isFile ? item.image.id : null;
+                
+                const card = document.createElement('div');
+                card.className = 'card-hover bg-gray-800 rounded-xl overflow-hidden cursor-pointer group';
+                card.onclick = () => playContent(item.id);
+                
+                let finalImageUrl = imageUrl || 'https://via.placeholder.com/300x450?text=No+Image';
+                
+                // إذا كانت صورة محفوظة، استرجعها من IndexedDB
+                if (imageId) {
+                    try {
+                        const file = await getCoverImage(imageId);
+                        if (file) {
+                            finalImageUrl = URL.createObjectURL(file);
+                        }
+                    } catch (err) {
+                        console.log('Error loading cover image:', err);
+                    }
+                }
+                
+                card.innerHTML = `
+                    <div class="relative aspect-[2/3] overflow-hidden">
+                        <img src="${finalImageUrl}" alt="${item.title}" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                             onerror="this.src='https://via.placeholder.com/300x450?text=No+Image'">
+                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                            <div class="w-16 h-16 rounded-full bg-purple-600 flex items-center justify-center">
+                                <i class="fas fa-play text-2xl text-white"></i>
+                            </div>
+                        </div>
+                        <div class="absolute top-2 right-2 px-2 py-1 rounded" style="background:linear-gradient(90deg,var(--accent-from),var(--accent-to));color:white;font-weight:700;font-size:.7rem;">
+                            ${getCategoryName(item.category)}
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg mb-1 truncate">${item.title}</h3>
+                        <p class="text-gray-400 text-sm line-clamp-2">${item.description}</p>
+                        <div class="mt-3 flex items-center justify-between text-xs text-gray-500">
+                            <span><i class="fas fa-video ml-1"></i> ${item.videos.length} فيديو</span>
+                            <span>${item.date}</span>
+                        </div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            }
+        }
+
+        // Render Admin Content List
+        async function renderAdminContent() {
+            const list = document.getElementById('adminContentList');
+            
+            if (contentData.length === 0) {
+                list.innerHTML = '<p class="text-gray-500 text-center py-4">لا يوجد محتوى</p>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            
+            for (const item of contentData) {
+                const imageUrl = item.image && item.image.isFile ? null : (item.image && item.image.url ? item.image.url : item.image);
+                const imageId = item.image && item.image.isFile ? item.image.id : null;
+                
+                let finalImageUrl = imageUrl || 'https://via.placeholder.com/64?text=No+Image';
+                
+                // إذا كانت صورة محفوظة، استرجعها من IndexedDB
+                if (imageId) {
+                    try {
+                        const file = await getCoverImage(imageId);
+                        if (file) {
+                            finalImageUrl = URL.createObjectURL(file);
+                        }
+                    } catch (err) {
+                        console.log('Error loading cover image:', err);
+                    }
+                }
+                
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-4 p-3 bg-gray-800 rounded-lg';
+                div.innerHTML = `
+                    <img src="${finalImageUrl}" class="w-16 h-16 object-cover rounded-lg" 
+                         onerror="this.src='https://via.placeholder.com/64?text=No+Image'">
+                    <div class="flex-1">
+                        <h4 class="font-bold">${item.title}</h4>
+                        <p class="text-sm text-gray-400">${getCategoryName(item.category)} • ${item.videos.length} فيديو</p>
+                    </div>
+                    <button onclick="openEditModal(${item.id})" class="p-2 rounded-lg bg-blue-600/20 text-blue-500 hover:bg-blue-600 hover:text-white transition" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteContent(${item.id})" class="p-2 rounded-lg bg-red-600/20 text-red-500 hover:bg-red-600 hover:text-white transition" title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                
+                list.appendChild(div);
+            }
+        }
+
+        // Play Content
+        function playContent(id) {
+            const item = contentData.find(c => c.id === id);
+            if (!item) return;
+            
+            // إذا كان هناك أجزاء متعددة، اعرض modal الاختيار
+            if (item.videos.length > 1) {
+                showPartsModal(item);
+                return;
+            }
+            
+            // وإلا، اجزء مباشرة إلى المشغل
+            startPlaying(item.id, 0);
+        }
+
+        function showPartsModal(item) {
+            document.getElementById('partsTitle').textContent = item.title;
+            
+            const grid = document.getElementById('partsGrid');
+            grid.innerHTML = item.videos.map((video, index) => `
+                <button onclick="startPlaying(${item.id}, ${index})" class="card-hover bg-gray-800 hover:bg-purple-600/20 rounded-xl p-4 text-center transition border border-purple-500/30">
+                    <div class="text-3xl font-bold gradient-text mb-2">${index + 1}</div>
+                    <p class="text-sm text-gray-400">جزء ${index + 1}</p>
+                </button>
+            `).join('');
+            
+            document.getElementById('partsModal').classList.remove('hidden');
+        }
+
+        function closePartsModal() {
+            document.getElementById('partsModal').classList.add('hidden');
+        }
+
+        function startPlaying(id, episodeIndex) {
+            const item = contentData.find(c => c.id === id);
+            if (!item) return;
+            
+            currentPlaying = id;
+            closePartsModal();
+            
+            document.getElementById('playerSection').classList.remove('hidden');
+            document.getElementById('contentGrid').classList.add('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+            
+            document.getElementById('currentTitle').textContent = item.title;
+            document.getElementById('currentDesc').textContent = item.description;
+            
+            // Load episodes
+            const episodesList = document.getElementById('episodesList');
+            window.currentContentId = item.id;
+            
+            episodesList.innerHTML = item.videos.map((video, index) => {
+                const label = item.videos.length > 1 ? 'جزء ' + (index + 1) : 'شاهد الآن';
+                return `
+                    <div class="episode-item p-3 rounded-lg flex items-center gap-3 ${index === episodeIndex ? 'active' : ''}" 
+                         onclick="playEpisodeByIndex(${id}, ${index})">
+                        <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-sm font-bold">
+                            ${index + 1}
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-medium">${label}</p>
+                        </div>
+                        <i class="fas fa-play text-xs"></i>
+                    </div>
+                `;
+            }).join('');
+
+            // Play selected video
+            if (item.videos.length > 0) {
+                playEpisodeByIndex(id, episodeIndex);
+            }
+            
+            // Scroll to player
+            document.getElementById('playerSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function playEpisodeByIndex(contentId, index) {
+            const content = contentData.find(c => c.id === contentId);
+            if (!content || !content.videos[index]) return;
+            
+            const videoSource = content.videos[index];
+            const element = document.querySelectorAll('.episode-item')[index];
+            playEpisode(videoSource, element, index);
+        }
+
+        function playEpisode(videoSource, element, index) {
+            window.currentEpisodeIndex = index;
+            const videoEl = document.getElementById('mainPlayer');
+
+            const playVideo = (url) => {
+                const setTimeAndPlay = (saved) => {
+                    const handler = function () {
+                        if (saved) {
+                            try { videoEl.currentTime = parseInt(saved, 10); } catch (e) {}
+                        }
+                        try { if (window.plyr) window.plyr.play(); else videoEl.play(); } catch (e) {}
+                        videoEl.removeEventListener('loadedmetadata', handler);
+                    };
+                    videoEl.addEventListener('loadedmetadata', handler);
+                };
+
+                const key = `aliNajeeb_play_${window.currentContentId}_${index}`;
+                const saved = localStorage.getItem(key);
+
+                if (window.plyr) {
+                    window.plyr.source = { type: 'video', sources: [{ src: url, type: 'video/mp4' }] };
+                    setTimeAndPlay(saved);
+                } else {
+                    videoEl.src = url;
+                    setTimeAndPlay(saved);
+                }
+            };
+
+            // إذا كان ملف محفوظ، استرجعه من IndexedDB
+            if (videoSource.isFile) {
+                getVideoFile(videoSource.id).then(file => {
+                    if (file) {
+                        const url = URL.createObjectURL(file);
+                        playVideo(url);
+                    } else {
+                        alert('لم يتمكن من العثور على الملف');
+                    }
+                }).catch(err => {
+                    alert('خطأ في تحميل الفيديو');
+                });
+            } else {
+                // إذا كان رابط، شغله مباشرة
+                playVideo(videoSource.url || videoSource);
+            }
+
+            // Update active state
+            document.querySelectorAll('.episode-item').forEach(el => el.classList.remove('active'));
+            if (element) element.classList.add('active');
+        }
+
+        // Chunked upload helper (client-side)
+        async function uploadLargeFile(file){
+            // Endpoint must be running at /upload-chunk and /upload-complete
+            const chunkSize = 5 * 1024 * 1024; // 5MB
+            const total = Math.ceil(file.size / chunkSize);
+            const fileId = `${Date.now()}_${Math.random().toString(36).slice(2,9)}`;
+            for (let i=0;i<total;i++){
+                const start = i*chunkSize;
+                const chunk = file.slice(start, start+chunkSize);
+                const form = new FormData();
+                form.append('chunk', chunk, file.name);
+                form.append('fileId', fileId);
+                form.append('index', i);
+                form.append('total', total);
+                form.append('filename', file.name);
+                const res = await fetch('/upload-chunk', { method:'POST', body: form });
+                if (!res.ok) throw new Error('Chunk upload failed: '+res.status);
+            }
+            // notify server to assemble
+            const final = await fetch('/upload-complete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ fileId, filename: file.name }) });
+            if (!final.ok) throw new Error('Finalize failed: '+final.status);
+            const j = await final.json();
+            return j.url; // server returns { url: '/uploads/...' }
+        }
+
+        function closePlayer() {
+            document.getElementById('playerSection').classList.add('hidden');
+            document.getElementById('contentGrid').classList.remove('hidden');
+            const videoEl = document.getElementById('mainPlayer');
+            try { if (window.plyr) window.plyr.pause(); else videoEl.pause(); } catch (e) {}
+            currentPlaying = null;
+            window.currentContentId = null;
+            window.currentEpisodeIndex = undefined;
+            renderContent();
+        }
+
+        // Search and Filter
+        function searchContent() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('#contentGrid > div');
+            
+            cards.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const desc = card.querySelector('p').textContent.toLowerCase();
+                
+                if (title.includes(query) || desc.includes(query)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function filterByCategory() {
+            const category = document.getElementById('categoryFilter').value;
+            const cards = document.querySelectorAll('#contentGrid > div');
+            
+            cards.forEach((card, index) => {
+                if (category === 'all' || contentData[index].category === category) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function getCategoryName(cat) {
+            const names = {
+                'arabic': 'عربي',
+                'foreign': 'أجنبي',
+                'movies': 'فيلم'
+            };
+            return names[cat] || cat;
+        }
+
+        // Close player when pressing Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && currentPlaying) {
+                closePlayer();
+            }
+        });
+
+        // --- AI Assistant: client-side error capture + lightweight UI ---
+        const _aiErrors = JSON.parse(localStorage.getItem('aliNajeeb_errors') || '[]');
+
+        function captureError(msg, file, line, col, stack){
+            const entry = { time: new Date().toISOString(), msg, file, line, col, stack };
+            _aiErrors.unshift(entry);
+            localStorage.setItem('aliNajeeb_errors', JSON.stringify(_aiErrors.slice(0, 100)));
+            ensureAIAssistant();
+            updateAIModal();
+        }
+
+        window.addEventListener('error', (e) => {
+            captureError(e.message || 'Error', e.filename || '', e.lineno || 0, e.colno || 0, (e.error && e.error.stack) || '');
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            const reason = e.reason && (e.reason.stack || e.reason.toString()) || 'Unhandled rejection';
+            captureError('UnhandledRejection', '', 0, 0, reason);
+        });
+
+        function ensureAIAssistant(){
+            if (document.getElementById('aiAssistBtn')) return;
+            const btn = document.createElement('button');
+            btn.id = 'aiAssistBtn';
+            btn.title = 'AI Assistant';
+            btn.innerHTML = '<i class="fas fa-robot"></i>';
+            Object.assign(btn.style, { position:'fixed', left:'18px', bottom:'18px', width:'56px', height:'56px', borderRadius:'999px', background:'linear-gradient(90deg,var(--accent-from),var(--accent-to))', color:'#fff', border:'none', boxShadow:'0 8px 20px rgba(13,17,30,0.6)', cursor:'pointer', zIndex:9999 });
+            btn.addEventListener('click', () => toggleAIModal(true));
+            document.body.appendChild(btn);
+
+            // modal
+            const modal = document.createElement('div');
+            modal.id = 'aiAssistModal';
+            Object.assign(modal.style, { position:'fixed', left:'20px', bottom:'90px', width:'420px', maxHeight:'70vh', overflow:'auto', background:'rgba(8,12,20,0.95)', color:'#fff', border:'1px solid rgba(255,255,255,0.06)', borderRadius:'12px', padding:'12px', boxShadow:'0 20px 60px rgba(2,6,23,0.6)', zIndex:9999, display:'none' });
+
+            modal.innerHTML = `
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                    <strong>AI Assistant</strong>
+                    <button id="aiClose" style="background:transparent;border:0;color:var(--muted);cursor:pointer">✕</button>
+                </div>
+                <div style="font-size:0.9rem;color:var(--muted);margin-bottom:8px">Captured errors (most recent first). Paste an OpenAI API key to enable suggestions.</div>
+                <input id="openaiKey" placeholder="Paste OpenAI API key (sk-...)" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);margin-bottom:8px;background:transparent;color:#fff" />
+                <div id="aiErrorsList" style="max-height:36vh;overflow:auto;padding:6px 0;margin-bottom:8px"></div>
+                <div style="display:flex;gap:8px;">
+                    <button id="askAI" style="flex:1;padding:8px;border-radius:8px;border:0;background:linear-gradient(90deg,var(--accent-from),var(--accent-to));color:#fff;cursor:pointer">Ask AI to suggest fix</button>
+                    <button id="clearErrors" style="padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:var(--muted);cursor:pointer">Clear</button>
+                </div>
+                <pre id="aiResponse" style="white-space:pre-wrap;background:rgba(0,0,0,0.2);padding:8px;border-radius:8px;margin-top:8px;color:#dfe9ff"></pre>
+            `;
+
+            document.body.appendChild(modal);
+            document.getElementById('aiClose').addEventListener('click', () => toggleAIModal(false));
+            document.getElementById('clearErrors').addEventListener('click', () => { localStorage.removeItem('aliNajeeb_errors'); _aiErrors.length=0; updateAIModal(); });
+            document.getElementById('askAI').addEventListener('click', async () => {
+                const k = document.getElementById('openaiKey').value || localStorage.getItem('aliNajeeb_openai_key');
+                if (k) localStorage.setItem('aliNajeeb_openai_key', k);
+                if (!k) return alert('Please paste your OpenAI API key first.');
+                const first = _aiErrors[0];
+                if (!first) return alert('No errors captured yet.');
+                document.getElementById('aiResponse').textContent = 'Thinking...';
+                try{
+                    const resp = await askAIForFix(k, first);
+                    document.getElementById('aiResponse').textContent = resp || 'No suggestion.';
+                }catch(err){
+                    document.getElementById('aiResponse').textContent = 'Request failed: '+err.message;
+                }
+            });
+            updateAIModal();
+        }
+
+        function toggleAIModal(show){
+            const m = document.getElementById('aiAssistModal');
+            if (!m) { ensureAIAssistant(); return; }
+            m.style.display = show ? 'block' : 'none';
+        }
+
+        function updateAIModal(){
+            const list = document.getElementById('aiErrorsList');
+            if (!list) return;
+            list.innerHTML = '';
+            const errors = JSON.parse(localStorage.getItem('aliNajeeb_errors')||'[]');
+            if (errors.length===0) list.innerHTML = '<div style="color:var(--muted)">No errors captured yet.</div>';
+            errors.slice(0,50).forEach((er,i)=>{
+                const d = document.createElement('div');
+                d.style.padding='8px'; d.style.borderBottom='1px solid rgba(255,255,255,0.03)';
+                d.innerHTML = `<div style="font-weight:700">${er.msg}</div><div style="color:var(--muted);font-size:0.85rem">${er.file}:${er.line} — ${new Date(er.time).toLocaleString()}</div>`;
+                d.addEventListener('click', ()=>{ document.getElementById('aiResponse').textContent = er.stack || er.msg; });
+                list.appendChild(d);
+            });
+        }
+
+        async function askAIForFix(apiKey, error){
+            // Minimal chat completion call. Note: browser requests to api.openai.com may be blocked by CORS.
+            const prompt = `You are an assistant for a small video platform. A runtime error occurred:\n${JSON.stringify(error, null, 2)}\nProvide a concise diagnosis and one or two concrete code changes (diff or patch) the developer can apply to fix or mitigate the issue.`;
+            const body = { model: 'gpt-4o-mini', messages: [{role:'system', content:'You help debug JavaScript/HTML web apps.'},{role:'user', content:prompt}], max_tokens:800 };
+            const r = await fetch('https://api.openai.com/v1/chat/completions', {
+                method:'POST', headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+apiKey }, body: JSON.stringify(body)
+            });
+            if (!r.ok) throw new Error('AI request failed: '+r.status+' '+await r.text());
+            const j = await r.json();
+            const txt = j.choices && j.choices[0] && (j.choices[0].message && j.choices[0].message.content) || JSON.stringify(j);
+            return txt;
+        }
+    </script>
+</body>
+</html>
